@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartDoc - Hujjatlar Klassifikatori</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+        /* ===== Dizayn oldingi kabi ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        h1 {
+            font-size: 2.8rem;
+            color: #2d3748;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, #4f46e5, #7c3aed);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: #6b7280;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .upload-section {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            margin-bottom: 40px;
+            transition: transform 0.3s ease;
+        }
+
+        .upload-section:hover {
+            transform: translateY(-5px);
+        }
+
+        .upload-box {
+            border: 3px dashed #cbd5e0;
+            border-radius: 16px;
+            padding: 60px 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #f8fafc;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .upload-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #4f46e5, #7c3aed);
+        }
+
+        .upload-box:hover {
+            border-color: #4f46e5;
+            background: rgba(79, 70, 229, 0.03);
+        }
+
+        .upload-box i {
+            font-size: 4rem;
+            color: #4f46e5;
+            margin-bottom: 20px;
+            display: block;
+        }
+
+        .upload-box h3 {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+            color: #2d3748;
+        }
+
+        .upload-box p {
+            color: #6b7280;
+            margin-bottom: 20px;
+            font-size: 1.1rem;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .file-info {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f1f5f9;
+            border-radius: 12px;
+            display: none;
+        }
+
+        .file-list {
+            list-style: none;
+            margin-top: 10px;
+        }
+
+        .file-list li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            background: white;
+            border-radius: 10px;
+            margin-bottom: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s;
+        }
+
+        .file-list li:hover {
+            transform: translateX(5px);
+        }
+
+        .file-name {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .file-name i {
+            color: #4f46e5;
+        }
+
+        .file-size {
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+
+        button {
+            padding: 14px 32px;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 4px 6px rgba(79, 70, 229, 0.2);
+        }
+
+        .classify-btn {
+            background: linear-gradient(90deg, #4f46e5, #7c3aed);
+            color: white;
+        }
+
+        .classify-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 7px 14px rgba(79, 70, 229, 0.3);
+        }
+
+        .clear-btn {
+            background: white;
+            color: #2d3748;
+            border: 2px solid #e2e8f0;
+        }
+
+        .clear-btn:hover {
+            background: #f7fafc;
+            border-color: #cbd5e0;
+        }
+
+        .categories {
+            display: grid;
+            grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+        }
+
+        .category {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .category:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .category-header {
+            padding: 25px;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .category-header i {
+            font-size: 1.8rem;
+        }
+
+        .category-content {
+            padding: 25px;
+            min-height: 200px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .category-count {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .file-item {
+            background: #f8fafc;
+            padding: 12px 15px;
+            border-radius: 10px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s ease;
+        }
+
+        .file-item:hover {
+            background: #f1f5f9;
+        }
+
+        .file-icon {
+            color: #4f46e5;
+            margin-right: 10px;
+        }
+
+        .empty-message {
+            text-align: center;
+            color: #9ca3af;
+            padding: 30px 0;
+            font-style: italic;
+        }
+
+        .prezident .category-header {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+        }
+
+        .vazirlik .category-header {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+        }
+
+        .rektorat .category-header {
+            background: linear-gradient(135deg, #10b981, #059669);
+        }
+
+        .dekanat .category-header {
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+        }
+
+        .kafedra .category-header {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+        }
+
+        .boshqalar .category-header {
+            background: linear-gradient(135deg, #6b7280, #4b5563);
+        }
+
+        .progress-bar {
+            height: 4px;
+            background: #e2e8f0;
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .progress {
+            height: 100%;
+            background: linear-gradient(90deg, #4f46e5, #7c3aed);
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.2rem
+            }
+
+            .upload-box {
+                padding: 40px 20px
+            }
+
+            .categories {
+                grid-template-columns:1fr
+            }
+
+            .buttons {
+                flex-direction: column
+            }
+
+            button {
+                width: 100%;
+                justify-content: center
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1><i class="fas fa-file-alt"></i> SmartDoc - Hujjatlar Klassifikatori</h1>
+        <p class="subtitle">Sun'iy intellekt yordamida hujjatlaringizni avtomatik tartiblang va tashkil eting</p>
+    </header>
+
+    <section class="upload-section">
+        <label class="upload-box" for="fileUpload">
+            <i class="fas fa-cloud-upload-alt"></i>
+            <h3>Hujjatlarni yuklash</h3>
+            <p>Fayllarni bu yerga sudrab keling yoki tanlash uchun bosing</p>
+            <div class="progress-bar">
+                <div class="progress" id="uploadProgress"></div>
+            </div>
+        </label>
+        <input type="file" id="fileUpload" multiple>
+
+        <div class="file-info" id="fileInfo">
+            <h4>Tanlangan fayllar:</h4>
+            <ul class="file-list" id="fileList"></ul>
+        </div>
+
+        <div class="buttons">
+            <button class="classify-btn" id="classifyBtn">
+                <i class="fas fa-cogs"></i> Klassifikatsiya qilish
+            </button>
+            <button class="clear-btn" id="clearBtn">
+                <i class="fas fa-trash-alt"></i> Tozalash
+            </button>
+        </div>
+    </section>
+
+    <section class="categories" id="categoriesContainer">
+
+    </section>
+</div>
+<script>
+    async function fetchCategoriesAndAttachments() {
+        try {
+            // 1️⃣ Kategoriyalarni olish
+            const catResponse = await axios.get('/api/v1/categories');
+            const categories = catResponse.data;
+
+            const container = document.getElementById('categoriesContainer');
+            container.innerHTML = '';
+
+            const categoryClassMap = {
+                "Prezident farmonlari": "prezident",
+                "Vazirlik farmonlari": "vazirlik",
+                "Rektorat hujjatlari": "rektorat",
+                "Dekanat hujjatlari": "dekanat",
+                "Kafedra hujjatlari": "kafedra",
+                "Boshqa hujjatlar": "boshqalar"
+            };
+
+            // Kategoriyalarni chizish
+            categories.forEach(cat => {
+                const cssClass = categoryClassMap[cat.name] || 'boshqalar';
+
+                const categoryDiv = document.createElement('div');
+                categoryDiv.classList.add('category', cssClass);
+                categoryDiv.innerHTML = `
+                <div class="category-header">
+                    <i class="fas fa-folder"></i>
+                    <h3>${cat.name}</h3>
+                    <div class="category-count">0</div>
+                </div>
+                <div class="category-content" id="cat-${cat.id}">
+                    <div class="empty-message">Hali hujjatlar qo'shilmagan</div>
+                </div>
+            `;
+                container.appendChild(categoryDiv);
+            });
+
+            // 2️⃣ Attachmentsni olish
+            const attachResponse = await axios.get('/api/v1/attachments');
+            const attachments = attachResponse.data;
+
+            // Attachmentlarni mos kategoriya ostiga qo‘yish
+            attachments.forEach(file => {
+                const contentContainer = document.getElementById(`cat-${file.category?.id || 'boshqalar'}`);
+                if (contentContainer) {
+                    const emptyMsg = contentContainer.querySelector('.empty-message');
+                    if (emptyMsg) emptyMsg.remove();
+
+                    const div = document.createElement('div');
+                    div.classList.add('file-item');
+
+                    div.innerHTML = `
+    <a href="/api/v1/attachments/download/${file.id}" download>
+        ${file.fileName}
+    </a>
+`;
+
+
+                    contentContainer.appendChild(div);
+                }
+            });
+
+            categories.forEach(cat => {
+                const container = document.getElementById(`cat-${cat.id}`);
+                if (container) {
+                    const categoryDiv = container.closest('.category');
+                    const countEl = categoryDiv.querySelector('.category-count');
+                    const fileCount = container.querySelectorAll('.file-item').length;
+                    countEl.textContent = fileCount;
+                }
+            });
+
+        } catch (error) {
+            console.error('Xatolik yuz berdi:', error);
+        }
+    }
+
+    const fileInput = document.getElementById("fileUpload");
+    const uploadProgress = document.getElementById("uploadProgress");
+
+    document.getElementById("classifyBtn").addEventListener("click", async () => {
+
+        if (fileInput.files.length === 0) {
+            alert("Iltimos, fayl yuklang!");
+            return;
+        }
+
+        let formData = new FormData();
+
+        for (let file of fileInput.files) {
+            formData.append("file", file);
+        }
+
+        try {
+            const response = await axios.post("/api/v1/attachments/upload",
+                formData,
+                {
+                    headers: {"Content-Type": "multipart/form-data"},
+                    onUploadProgress: progressEvent => {
+                        uploadProgress.style.width =
+                            `${Math.round((progressEvent.loaded * 100) / progressEvent.total)}%`;
+                    }
+                }
+            );
+
+            alert("Fayllar muvaffaqiyatli yuklandi va klassifikatsiya qilindi!");
+            fetchCategoriesAndAttachments(); // UI yangilash
+
+        } catch (err) {
+            console.error(err);
+            alert("Yuklashda xatolik!");
+        }
+    });
+
+    document.getElementById("clearBtn").addEventListener("click", () => {
+        fileInput.value = "";
+        uploadProgress.style.width = "0%";
+        document.getElementById("fileList").innerHTML = "";
+        document.getElementById("fileInfo").style.display = "none";
+    });
+
+    // Fayl tanlanganida ekranga chiqarish
+    fileInput.addEventListener("change", () => {
+        const fileList = document.getElementById("fileList");
+        fileList.innerHTML = "";
+
+        for (let file of fileInput.files) {
+            fileList.innerHTML += `
+                <li>
+                    <div class="file-name">
+                        <i class="fas fa-file"></i> ${file.name}
+                    </div>
+                    <span class="file-size">${(file.size / 1024).toFixed(1)} KB</span>
+                </li>
+            `;
+        }
+
+        document.getElementById("fileInfo").style.display = "block";
+    });
+
+
+    document.addEventListener('DOMContentLoaded', fetchCategoriesAndAttachments);
+
+</script>
+
+</body>
+</html>
